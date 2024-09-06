@@ -641,8 +641,8 @@ FILE * ggml_fopen(const char * fname, const char * mode) {
 
 static const size_t CACHE_LINE_SIZE_F32 = CACHE_LINE_SIZE/sizeof(float);
 
-static void ggml_vec_dot_f32(int n, float * restrict s, size_t bs, const float * restrict x, size_t bx, const float * restrict y, size_t by, int nrc);
-static void ggml_vec_dot_f16(int n, float * restrict s, size_t bs, ggml_fp16_t * restrict x, size_t bx, ggml_fp16_t * restrict y, size_t by, int nrc);
+void ggml_vec_dot_f32(int n, float * restrict s, size_t bs, const float * restrict x, size_t bx, const float * restrict y, size_t by, int nrc);
+void ggml_vec_dot_f16(int n, float * restrict s, size_t bs, ggml_fp16_t * restrict x, size_t bx, ggml_fp16_t * restrict y, size_t by, int nrc);
 static void ggml_vec_dot_bf16(int n, float * restrict s, size_t bs, ggml_bf16_t * restrict x, size_t bx, ggml_bf16_t * restrict y, size_t by, int nrc);
 
 static const ggml_type_traits_t type_traits[GGML_TYPE_COUNT] = {
@@ -2032,7 +2032,7 @@ inline static void ggml_vec_set_f16(const int n, ggml_fp16_t * x, const int32_t 
 
 inline static void ggml_vec_set_bf16(const int n, ggml_bf16_t * x, const ggml_bf16_t v) { for (int i = 0; i < n; ++i) x[i] = v; }
 
-inline static void ggml_vec_add_f32 (const int n, float * z, const float * x, const float * y) { for (int i = 0; i < n; ++i) z[i]  = x[i] + y[i]; }
+void ggml_vec_add_f32 (const int n, float * z, const float * x, const float * y) { for (int i = 0; i < n; ++i) z[i]  = x[i] + y[i]; }
 inline static void ggml_vec_add1_f32(const int n, float * z, const float * x, const float   v) { for (int i = 0; i < n; ++i) z[i]  = x[i] + v;    }
 inline static void ggml_vec_acc_f32 (const int n, float * y, const float * x)                  { for (int i = 0; i < n; ++i) y[i] += x[i];        }
 inline static void ggml_vec_acc1_f32(const int n, float * y, const float   v)                  { for (int i = 0; i < n; ++i) y[i] += v;           }
@@ -2040,10 +2040,10 @@ inline static void ggml_vec_sub_f32 (const int n, float * z, const float * x, co
 inline static void ggml_vec_set_f32 (const int n, float * x, const float   v)                  { for (int i = 0; i < n; ++i) x[i]  = v;           }
 inline static void ggml_vec_cpy_f32 (const int n, float * y, const float * x)                  { for (int i = 0; i < n; ++i) y[i]  = x[i];        }
 inline static void ggml_vec_neg_f32 (const int n, float * y, const float * x)                  { for (int i = 0; i < n; ++i) y[i]  = -x[i];       }
-inline static void ggml_vec_mul_f32 (const int n, float * z, const float * x, const float * y) { for (int i = 0; i < n; ++i) z[i]  = x[i]*y[i];   }
+void ggml_vec_mul_f32 (const int n, float * z, const float * x, const float * y) { for (int i = 0; i < n; ++i) z[i]  = x[i]*y[i];   }
 inline static void ggml_vec_div_f32 (const int n, float * z, const float * x, const float * y) { for (int i = 0; i < n; ++i) z[i]  = x[i]/y[i];   }
 
-static void ggml_vec_dot_f32(int n, float * restrict s, size_t bs, const float * restrict x, size_t bx, const float * restrict y, size_t by, int nrc) {
+void ggml_vec_dot_f32(int n, float * restrict s, size_t bs, const float * restrict x, size_t bx, const float * restrict y, size_t by, int nrc) {
    assert(nrc == 1);
    UNUSED(nrc);
    UNUSED(bx);
@@ -2150,7 +2150,7 @@ static void ggml_vec_dot_bf16(int n, float * restrict s, size_t bs, ggml_bf16_t 
     *s = sumf;
 }
 
-static void ggml_vec_dot_f16(int n, float * restrict s, size_t bs, ggml_fp16_t * restrict x, size_t bx, ggml_fp16_t * restrict y, size_t by, int nrc) {
+void ggml_vec_dot_f16(int n, float * restrict s, size_t bs, ggml_fp16_t * restrict x, size_t bx, ggml_fp16_t * restrict y, size_t by, int nrc) {
     assert(nrc == 1);
     UNUSED(nrc);
     UNUSED(bx);
@@ -9616,7 +9616,7 @@ static void ggml_compute_forward_dup(
 
 // ggml_compute_forward_add
 
-static void ggml_compute_forward_add_f32(
+void ggml_compute_forward_add_f32(
         const struct ggml_compute_params * params,
         struct ggml_tensor * dst) {
 
@@ -10704,7 +10704,7 @@ static void ggml_compute_forward_sub(
 
 // ggml_compute_forward_mul
 
-static void ggml_compute_forward_mul_f32(
+void ggml_compute_forward_mul_f32(
         const struct ggml_compute_params * params,
         struct ggml_tensor * dst) {
 
@@ -12864,8 +12864,9 @@ static void ggml_compute_forward_mul_mat(
 #endif
 
 #if GGML_USE_IQK_MULMAT
-    if (dst->type == GGML_TYPE_F32 && (ne12*ne13)%nth == 0) {
+    if ((dst->type == GGML_TYPE_F32) && ((ne12*ne13)%nth == 0)) {
         int counter = 0;
+        int64_t t1 = ggml_time_us();
         for (int64_t i13 = 0; i13 < ne13; i13++) {
             for (int64_t i12 = 0; i12 < ne12; i12++) {
                 if (counter++ % nth == ith) {
@@ -12873,10 +12874,18 @@ static void ggml_compute_forward_mul_mat(
                                 src0->type, (const char *)src0->data + i12/r2*nb02 + i13/r3*nb03, nb01/ggml_type_size(src0->type),
                                 src1->type, (const char *)src1->data + i12*nb12 + i13*nb13, nb11/ggml_type_size(src1->type),
                                 (float *)((char *)dst->data + i12*nb2 + i13*nb3), nb1/ggml_type_size(dst->type),
-                                0, 1)) goto IQK_MulMat_Not_Available1;
+                                0, 1)) {
+                        goto IQK_MulMat_Not_Available1;
+                    }
                 }
             }
         }
+        int64_t t2 = ggml_time_us();
+        printf("[01]: iqk_mul_mat: (%s)*(%s)->(%s):%I64d-%I64d-%I64d\n"
+               "             type: (%s) (%s) (%s)\n",
+                           src0->name, src1->name, dst->name, ne01, ne11, ne00,
+                           ggml_type_name(src0->type), ggml_type_name(src1->type), ggml_type_name(dst->type));
+        printf("   -- counter=[%d]:<%d> us\n", counter, (int)(t2 - t1));
         return;
     }
     if (dst->type == GGML_TYPE_F32) {
@@ -12886,7 +12895,13 @@ static void ggml_compute_forward_mul_mat(
                             src0->type, (const char *)src0->data + i12/r2*nb02 + i13/r3*nb03, nb01/ggml_type_size(src0->type),
                             src1->type, (const char *)src1->data + i12*nb12 + i13*nb13, nb11/ggml_type_size(src1->type),
                             (float *)((char *)dst->data + i12*nb2 + i13*nb3), nb1/ggml_type_size(dst->type),
-                            ith, nth)) goto IQK_MulMat_Not_Available1;
+                            ith, nth)) {
+                    goto IQK_MulMat_Not_Available1;
+                } else {
+                    printf("[02]: iqk_mul_mat: (%s)-(%s)-(%s):%I64d-%I64d-%I64d\n",
+                        ggml_type_name(src0->type), ggml_type_name(src1->type), ggml_type_name(dst->type),
+                        ne01, ne11, ne00);
+                }
         return;
     }
 IQK_MulMat_Not_Available1:;
@@ -12966,6 +12981,7 @@ UseGgmlGemm1:;
 
 #if GGML_USE_IQK_MULMAT
     if (src1->type != vec_dot_type && dst->type == GGML_TYPE_F32) {
+        int64_t t1 = ggml_time_us();
         const size_t row_size = ggml_row_size(vec_dot_type, ne10);
         for (int64_t i13 = 0; i13 < ne13; i13++)
             for (int64_t i12 = 0; i12 < ne12; i12++)
@@ -12973,7 +12989,15 @@ UseGgmlGemm1:;
                             src0->type, (const char *)src0->data + i12/r2*nb02 + i13/r3*nb03, nb01/ggml_type_size(src0->type),
                             vec_dot_type, (const char *)wdata + (i12*ne11 + i13*ne12*ne11)*row_size, row_size/ggml_type_size(vec_dot_type),
                             (float *)((char *)dst->data + i12*nb2 + i13*nb3), nb1/ggml_type_size(dst->type),
-                            ith, nth)) goto IQK_MulMat_Not_Available2;
+                            ith, nth)) {
+                    goto IQK_MulMat_Not_Available2;
+                } else {
+                    printf("[03]: iqk_mul_mat: (%s)-(%s)-(%s):%I64d-%I64d-%I64d\n",
+                       ggml_type_name(src0->type), ggml_type_name(src1->type), ggml_type_name(dst->type),
+                       ne01, ne11, ne00);
+                }
+        int64_t t2 = ggml_time_us();
+        printf("   -- [%s]-<%d> us\n", dst->name, (int)(t2 - t1));
         return;
     }
 IQK_MulMat_Not_Available2:;
@@ -13205,8 +13229,12 @@ static void ggml_compute_forward_mul_mat_id(
                        src0->type, (const char *)src0_cur, nb01/ggml_type_size(src0->type),
                        vec_dot_type, (const char *)wdata, row_size/ggml_type_size(vec_dot_type),
                        (float *)dst->data, nb1, nb2,
-                       matrix_rows + cur_a*ne12, ith, nth)) goto IQK_MulMat_Not_Available;
-                continue;
+                       matrix_rows + cur_a*ne12, ith, nth)) {
+                goto IQK_MulMat_Not_Available;
+            } else {
+                printf("%s: iqk_mul_mat_moe_1\n", __func__);
+            }
+            continue;
         }
 IQK_MulMat_Not_Available:;
 #endif
@@ -16149,7 +16177,7 @@ static void ggml_compute_forward_flash_attn_ext_f16(
         scale /= softcap;
     }
 
-#if GGML_USE_IQK_MULMAT
+    #if GGML_USE_IQK_MULMAT
     if (max_bias <= 0.0f && q->type == GGML_TYPE_F32 && k->type == GGML_TYPE_F16 && v->type == GGML_TYPE_F16 &&
         mask && mask->type == GGML_TYPE_F16) {
         int64_t work_per_slice = D*nek1*neq1;
@@ -16182,7 +16210,7 @@ IQK_Flash_Attn_NotAvailable:;
 
 #endif
 
-    const uint32_t n_head      = neq2;
+const uint32_t n_head      = neq2;
     const uint32_t n_head_log2 = 1u << (uint32_t) floor(log2(n_head));
 
     const float m0 = powf(2.0f, -(max_bias       ) / n_head_log2);

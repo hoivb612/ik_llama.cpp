@@ -3772,6 +3772,7 @@ void dequantize_row_q8_K(const block_q8_K * restrict x, float * restrict y, int6
 
 void quantize_row_q8_K(const float * restrict x, void * restrict y, int64_t k) {
 #ifdef GGML_USE_IQK_MULMAT
+    // printf("%s: iqk_quantize_row_q8_K\n", __func__);
     iqk_quantize_row_q8_K(x, y, k);
 #else
     quantize_row_q8_K_ref(x, y, k);
@@ -3862,6 +3863,7 @@ static inline __m128i get_scale_shuffle(int i) {
 
 void ggml_vec_dot_q4_0_q8_0(int n, float * restrict s, size_t bs, const void * restrict vx, size_t bx, const void * restrict vy, size_t by, int nrc) {
 #if GGML_USE_IQK_MULMAT
+    printf("%s: quants_iqk_mul_mat_1\n", __func__);
     if (iqk_mul_mat(nrc, nrc, n, GGML_TYPE_Q4_0, vx, bx, GGML_TYPE_Q8_0, vy, by, s, bs, 0, 1)) {
         return;
     }
@@ -4349,6 +4351,7 @@ void ggml_vec_dot_q4_0_q8_0(int n, float * restrict s, size_t bs, const void * r
 
 void ggml_vec_dot_q4_1_q8_1(int n, float * restrict s, size_t bs, const void * restrict vx, size_t bx, const void * restrict vy, size_t by, int nrc) {
 #if GGML_USE_IQK_MULMAT
+    printf("%s: quants_iqk_mul_mat_2\n", __func__);
     if (iqk_mul_mat(nrc, nrc, n, GGML_TYPE_Q4_1, vx, bx, GGML_TYPE_Q8_1, vy, by, s, bs, 0, 1)) {
         return;
     }
@@ -4641,6 +4644,7 @@ void ggml_vec_dot_q4_1_q8_1(int n, float * restrict s, size_t bs, const void * r
 
 void ggml_vec_dot_q5_0_q8_0(int n, float * restrict s, size_t bs, const void * restrict vx, size_t bx, const void * restrict vy, size_t by, int nrc) {
 #if GGML_USE_IQK_MULMAT
+    printf("%s: quants_iqk_mul_mat_3\n", __func__);
     if (iqk_mul_mat(nrc, nrc, n, GGML_TYPE_Q5_0, vx, bx, GGML_TYPE_Q8_0, vy, by, s, bs, 0, 1)) {
         return;
     }
@@ -5001,6 +5005,7 @@ void ggml_vec_dot_q5_0_q8_0(int n, float * restrict s, size_t bs, const void * r
 
 void ggml_vec_dot_q5_1_q8_1(int n, float * restrict s, size_t bs, const void * restrict vx, size_t bx, const void * restrict vy, size_t by, int nrc) {
 #if GGML_USE_IQK_MULMAT
+    printf("%s: quants_iqk_mul_mat_4\n", __func__);
     if (iqk_mul_mat(nrc, nrc, n, GGML_TYPE_Q5_1, vx, bx, GGML_TYPE_Q8_1, vy, by, s, bs, 0, 1)) {
         return;
     }
@@ -5380,6 +5385,7 @@ void ggml_vec_dot_q5_1_q8_1(int n, float * restrict s, size_t bs, const void * r
 
 void ggml_vec_dot_q8_0_q8_0(int n, float * restrict s, size_t bs, const void * restrict vx, size_t bx, const void * restrict vy, size_t by, int nrc) {
 #if GGML_USE_IQK_MULMAT
+    printf("%s: quants_iqk_mul_mat_5\n", __func__);
     if (iqk_mul_mat(nrc, nrc, n, GGML_TYPE_Q8_0, vx, bx, GGML_TYPE_Q8_0, vy, by, s, bs, 0, 1)) {
         return;
     }
@@ -11754,6 +11760,7 @@ void ggml_vec_dot_iq1_m_q8_K  (int n, float * restrict s, size_t bs, const void 
 
 void ggml_vec_dot_iq4_nl_q8_0(int n, float * restrict s, size_t bs, const void * restrict vx, size_t bx, const void * restrict vy, size_t by, int nrc) {
 #if GGML_USE_IQK_MULMAT
+    printf("%s: quants_iqk_mul_mat_6\n", __func__);
     if (iqk_mul_mat(nrc, nrc, n, GGML_TYPE_IQ4_NL, vx, bx, GGML_TYPE_Q8_0, vy, by, s, bs, 0, 1)) {
         return;
     }
