@@ -4084,6 +4084,7 @@ struct llama_model_loader {
         if (duplicated) {
             size_data += ggml_nbytes(cur);
         } else {
+            printf("%s: created %s\n", __func__, ggml_get_name(cur));
             n_created++;
         }
 
@@ -4156,6 +4157,7 @@ struct llama_model_loader {
 
         ggml_set_name(tensor, name.c_str());
 
+        printf("%s: created %s\n", __func__, name.c_str());
         n_created++;
 
         return tensor;
@@ -4918,7 +4920,6 @@ static void llm_load_hparams(
             } break;
         case LLM_ARCH_PHI3:
             {
-                ml.get_key(LLM_KV_ATTENTION_SLIDING_WINDOW, hparams.n_swa, false);
                 ml.get_key(LLM_KV_ATTENTION_LAYERNORM_RMS_EPS, hparams.f_norm_rms_eps);
 
                 switch (hparams.n_layer) {
